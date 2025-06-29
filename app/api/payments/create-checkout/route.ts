@@ -44,7 +44,7 @@ export async function POST(request: NextRequest) {
 
     // Debug: Log the environment variable
     console.log('NEXT_PUBLIC_APP_URL:', process.env.NEXT_PUBLIC_APP_URL);
-    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://invoice-generator-seven-omega.vercel.app';
     console.log('Using base URL:', baseUrl);
 
     // Create Stripe checkout session with proper redirect URLs

@@ -42,7 +42,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Invoice is already paid' }, { status: 400 });
     }
 
-    // Create Stripe checkout session
+    // Create Stripe checkout session with proper redirect URLs
     const checkoutSession = await stripe.checkout.sessions.create({
       payment_method_types: ['card'],
       line_items: [

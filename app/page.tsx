@@ -3,7 +3,7 @@ import { getServerSession } from 'next-auth/next'
 import { authOptions } from '@/lib/auth'
 import { redirect } from 'next/navigation'
 
-export default async function Home() {
+export default async function HomePage() {
   const session = await getServerSession(authOptions)
 
   if (session) {
@@ -11,17 +11,26 @@ export default async function Home() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary-50 to-primary-100">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
       {/* Navigation */}
       <nav className="bg-white shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between h-16">
+          <div className="flex justify-between items-center h-16">
             <div className="flex items-center">
-              <h1 className="text-2xl font-bold text-primary-600">InvoiceGen</h1>
+              <h1 className="text-2xl font-bold text-indigo-600">Invoicely</h1>
             </div>
             <div className="flex items-center space-x-4">
-              <Link href="/auth/signin" className="btn-primary">
+              <Link
+                href="/auth/signin"
+                className="text-gray-700 hover:text-indigo-600 px-3 py-2 rounded-md text-sm font-medium"
+              >
                 Sign In
+              </Link>
+              <Link
+                href="/auth/signin"
+                className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-md text-sm font-medium"
+              >
+                Get Started
               </Link>
             </div>
           </div>
@@ -32,102 +41,81 @@ export default async function Home() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
         <div className="text-center">
           <h1 className="text-4xl md:text-6xl font-bold text-gray-900 mb-6">
-            Professional Invoice Management
-            <span className="text-primary-600"> Made Simple</span>
+            Professional Invoicing
+            <span className="text-indigo-600"> Made Simple</span>
           </h1>
           <p className="text-xl text-gray-600 mb-8 max-w-3xl mx-auto">
-            Create, send, and track professional invoices with ease. Get paid faster with our streamlined invoice management system designed for freelancers and businesses.
+            Create, manage, and send professional invoices with ease. Get paid faster with our streamlined invoice management system featuring payment processing and email automation.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link href="/auth/signin" className="btn-primary text-lg px-8 py-3">
-              Get Started Free
+            <Link
+              href="/auth/signin"
+              className="bg-indigo-600 hover:bg-indigo-700 text-white px-8 py-3 rounded-lg text-lg font-medium transition-colors"
+            >
+              Start Free Trial
             </Link>
-            <Link href="#features" className="btn-secondary text-lg px-8 py-3">
-              Learn More
+            <Link
+              href="/auth/signin"
+              className="border border-gray-300 hover:border-indigo-600 text-gray-700 hover:text-indigo-600 px-8 py-3 rounded-lg text-lg font-medium transition-colors"
+            >
+              Sign In
             </Link>
           </div>
         </div>
       </div>
 
       {/* Features Section */}
-      <div id="features" className="bg-white py-20">
+      <div className="bg-white py-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
             <h2 className="text-3xl font-bold text-gray-900 mb-4">
               Everything You Need to Manage Invoices
             </h2>
             <p className="text-xl text-gray-600">
-              Powerful features to streamline your invoicing workflow
+              Powerful features to streamline your invoicing process
             </p>
           </div>
-
-          <div className="grid md:grid-cols-3 gap-8">
-            <div className="card p-6">
-              <div className="w-12 h-12 bg-primary-100 rounded-lg flex items-center justify-center mb-4">
-                <svg className="w-6 h-6 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <div className="text-center">
+              <div className="bg-indigo-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+                <svg className="w-8 h-8 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                 </svg>
               </div>
-              <h3 className="text-xl font-semibold text-gray-900 mb-2">Create Professional Invoices</h3>
-              <p className="text-gray-600">
-                Design beautiful, professional invoices with customizable templates and branding.
-              </p>
+              <h3 className="text-xl font-semibold text-gray-900 mb-2">Professional Invoices</h3>
+              <p className="text-gray-600">Create beautiful, professional invoices with customizable templates and branding.</p>
             </div>
-
-            <div className="card p-6">
-              <div className="w-12 h-12 bg-primary-100 rounded-lg flex items-center justify-center mb-4">
-                <svg className="w-6 h-6 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            
+            <div className="text-center">
+              <div className="bg-indigo-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+                <svg className="w-8 h-8 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
                 </svg>
               </div>
-              <h3 className="text-xl font-semibold text-gray-900 mb-2">Online Payments</h3>
-              <p className="text-gray-600">
-                Accept payments online with Stripe integration. Get paid faster with secure payment processing.
-              </p>
+              <h3 className="text-xl font-semibold text-gray-900 mb-2">Payment Processing</h3>
+              <p className="text-gray-600">Accept online payments with Stripe integration. Get paid faster with secure payment processing.</p>
             </div>
-
-            <div className="card p-6">
-              <div className="w-12 h-12 bg-primary-100 rounded-lg flex items-center justify-center mb-4">
-                <svg className="w-6 h-6 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+            
+            <div className="text-center">
+              <div className="bg-indigo-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+                <svg className="w-8 h-8 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                 </svg>
               </div>
-              <h3 className="text-xl font-semibold text-gray-900 mb-2">Track & Manage</h3>
-              <p className="text-gray-600">
-                Keep track of all your invoices, payments, and client information in one centralized dashboard.
-              </p>
+              <h3 className="text-xl font-semibold text-gray-900 mb-2">Email Automation</h3>
+              <p className="text-gray-600">Send invoices directly to clients via email with PDF attachments and payment reminders.</p>
             </div>
           </div>
-        </div>
-      </div>
-
-      {/* CTA Section */}
-      <div className="bg-primary-600 py-16">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h2 className="text-3xl font-bold text-white mb-4">
-            Ready to Get Started?
-          </h2>
-          <p className="text-xl text-primary-100 mb-8">
-            Join thousands of professionals who trust our platform for their invoicing needs.
-          </p>
-          <Link href="/auth/signin" className="bg-white text-primary-600 font-semibold py-3 px-8 rounded-lg hover:bg-gray-100 transition-colors duration-200">
-            Start Creating Invoices
-          </Link>
         </div>
       </div>
 
       {/* Footer */}
-      <footer className="bg-gray-900 text-white py-12">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center">
-            <h3 className="text-2xl font-bold mb-4">InvoiceGen</h3>
-            <p className="text-gray-400">
-              Professional invoice management made simple.
-            </p>
-            <div className="mt-8 text-gray-400">
-              <p>&copy; 2024 InvoiceGen. All rights reserved.</p>
-            </div>
-          </div>
+      <footer className="bg-gray-50 py-12">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          <p className="text-gray-600">
+            © 2024 Invoicely. All rights reserved.
+          </p>
         </div>
       </footer>
     </div>

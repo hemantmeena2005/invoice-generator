@@ -100,7 +100,7 @@ export async function GET(request: NextRequest) {
     }));
 
     // Get top clients by revenue
-    const clientRevenue = {};
+    const clientRevenue: { [key: string]: number } = {};
     invoices.forEach(invoice => {
       if (invoice.status === 'paid') {
         const clientId = invoice.clientId._id.toString();

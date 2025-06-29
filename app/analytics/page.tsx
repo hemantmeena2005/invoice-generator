@@ -70,8 +70,8 @@ async function getAnalyticsData() {
     }
 
     // Get top clients by revenue
-    const clientRevenue = {}
-    const clientInvoiceCount = {}
+    const clientRevenue: { [key: string]: number } = {}
+    const clientInvoiceCount: { [key: string]: number } = {}
     
     paidInvoices.forEach(invoice => {
       const clientName = invoice.clientId.name

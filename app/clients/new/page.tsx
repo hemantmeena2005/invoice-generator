@@ -77,7 +77,7 @@ export default function NewClientPage() {
       setFormData(prev => ({
         ...prev,
         [parent]: {
-          ...prev[parent as keyof typeof prev],
+          ...(parent === "address" && typeof prev.address === "object" ? prev.address : {}),
           [child]: value,
         },
       }))

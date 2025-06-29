@@ -63,6 +63,8 @@ async function getDashboardData() {
       status: invoice.status,
       dueDate: invoice.dueDate,
       issueDate: invoice.issueDate,
+      emailStatus: invoice.emailStatus || 'not_sent',
+      lastEmailedAt: invoice.lastEmailedAt,
     }))
 
     // Calculate monthly revenue for the last 6 months
@@ -85,7 +87,7 @@ async function getDashboardData() {
     }
 
     // Get top clients by revenue
-    const clientRevenue = {}
+    const clientRevenue: { [key: string]: number } = {}
     paidInvoices.forEach(invoice => {
       const clientName = invoice.clientId.name
       clientRevenue[clientName] = (clientRevenue[clientName] || 0) + invoice.total

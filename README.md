@@ -194,6 +194,8 @@ For support and questions:
 - Check the documentation
 - Review the setup guides
 
+<!-- Trigger redeploy -->
+
 ---
 
 Built with ❤️ using Next.js, TypeScript, and Tailwind CSS 

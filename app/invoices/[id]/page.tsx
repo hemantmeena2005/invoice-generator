@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter, useParams } from 'next/navigation'
 import DashboardLayout from '@/components/DashboardLayout'
-import { ArrowLeftIcon, DocumentArrowDownIcon, CreditCardIcon } from '@heroicons/react/24/outline'
+import { ArrowLeftIcon, DocumentArrowDownIcon, CreditCardIcon, PencilIcon } from '@heroicons/react/24/outline'
 import Link from 'next/link'
 import { format } from 'date-fns'
 
@@ -179,6 +179,13 @@ export default function InvoiceViewPage() {
                 </svg>
                 Refresh
               </button>
+              <Link
+                href={`/invoices/${invoiceId}/edit`}
+                className="btn-secondary inline-flex items-center"
+              >
+                <PencilIcon className="h-5 w-5 mr-2" />
+                Edit
+              </Link>
               <button
                 onClick={handleDownloadPDF}
                 className="btn-secondary inline-flex items-center"

@@ -42,6 +42,11 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Invoice is already paid' }, { status: 400 });
     }
 
+    // Debug: Log the environment variable
+    console.log('NEXT_PUBLIC_APP_URL:', process.env.NEXT_PUBLIC_APP_URL);
+    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+    console.log('Using base URL:', baseUrl);
+
     // Create Stripe checkout session with proper redirect URLs
     const checkoutSession = await stripe.checkout.sessions.create({
       payment_method_types: ['card'],
@@ -59,8 +64,8 @@ export async function POST(request: NextRequest) {
         },
       ],
       mode: 'payment',
-      success_url: `${process.env.NEXT_PUBLIC_APP_URL}/invoices/${invoiceId}?success=true`,
-      cancel_url: `${process.env.NEXT_PUBLIC_APP_URL}/invoices/${invoiceId}?canceled=true`,
+      success_url: `${baseUrl}/invoices/${invoiceId}?success=true`,
+      cancel_url: `${baseUrl}/invoices/${invoiceId}?canceled=true`,
       metadata: {
         invoiceId: invoiceId,
         userId: user._id.toString(),

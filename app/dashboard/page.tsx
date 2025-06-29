@@ -8,13 +8,17 @@ import {
   UserGroupIcon, 
   ClockIcon,
   ExclamationTriangleIcon,
-  ChartBarIcon
+  ChartBarIcon,
+  CheckCircleIcon,
+  EnvelopeIcon
 } from '@heroicons/react/24/outline'
 import Link from 'next/link'
 import dbConnect from '@/lib/db'
 import Invoice from '@/models/Invoice'
 import Client from '@/models/Client'
 import User from '@/models/User'
+import { useState, useEffect } from 'react'
+import { format } from 'date-fns'
 
 async function getDashboardData() {
   const session = await getServerSession(authOptions)
@@ -92,6 +96,39 @@ async function getDashboardData() {
       .sort((a, b) => b.revenue - a.revenue)
       .slice(0, 5)
 
+    // Email statistics
+    const emailStats = {
+      totalSent: 0,
+      delivered: 0,
+      failed: 0,
+      notSent: 0
+    }
+
+    const recentEmailActivity = []
+
+    for (const invoice of invoices) {
+      if (invoice.emailStatus) {
+        emailStats.totalSent++
+        if (invoice.emailStatus === 'delivered') {
+          emailStats.delivered++
+        } else if (invoice.emailStatus === 'failed') {
+          emailStats.failed++
+        } else {
+          emailStats.notSent++
+        }
+      }
+
+      if (invoice.lastEmailedAt) {
+        recentEmailActivity.push({
+          invoiceNumber: invoice.invoiceNumber,
+          clientName: invoice.clientId.name,
+          emailType: invoice.emailType || 'invoice',
+          status: invoice.emailStatus || 'sent',
+          sentAt: invoice.lastEmailedAt
+        })
+      }
+    }
+
     return {
       totalInvoices,
       totalClients,
@@ -104,6 +141,8 @@ async function getDashboardData() {
       monthlyRevenue,
       topClients,
       paidInvoices: paidInvoices.length,
+      emailStats,
+      recentEmailActivity
     }
   } catch (error) {
     console.error('Error fetching dashboard data:', error)
@@ -184,6 +223,23 @@ export default async function Dashboard() {
       default:
         return 'bg-gray-100 text-gray-800'
     }
+  }
+
+  const getEmailStatusColor = (status: string) => {
+    switch (status) {
+      case 'delivered':
+        return 'bg-green-100 text-green-800'
+      case 'sent':
+        return 'bg-blue-100 text-blue-800'
+      case 'failed':
+        return 'bg-red-100 text-red-800'
+      default:
+        return 'bg-gray-100 text-gray-800'
+    }
+  }
+
+  const isOverdue = (dueDate: string) => {
+    return new Date(dueDate) < new Date() && new Date(dueDate).getTime() !== new Date().setHours(0, 0, 0, 0)
   }
 
   return (
@@ -384,6 +440,182 @@ export default async function Dashboard() {
               </div>
             </div>
           </Link>
+        </div>
+
+        {/* Email Statistics */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+          {/* Email Overview */}
+          <div className="card">
+            <div className="px-6 py-4 border-b border-gray-200">
+              <h2 className="text-lg font-medium text-gray-900">Email Statistics</h2>
+            </div>
+            <div className="p-6">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="text-center">
+                  <div className="text-2xl font-bold text-green-600">{data.emailStats.delivered}</div>
+                  <div className="text-sm text-gray-500">Delivered</div>
+                </div>
+                <div className="text-center">
+                  <div className="text-2xl font-bold text-blue-600">{data.emailStats.totalSent - data.emailStats.delivered}</div>
+                  <div className="text-sm text-gray-500">Sent</div>
+                </div>
+                <div className="text-center">
+                  <div className="text-2xl font-bold text-red-600">{data.emailStats.failed}</div>
+                  <div className="text-sm text-gray-500">Failed</div>
+                </div>
+                <div className="text-center">
+                  <div className="text-2xl font-bold text-gray-600">{data.emailStats.notSent}</div>
+                  <div className="text-sm text-gray-500">Not Sent</div>
+                </div>
+              </div>
+              <div className="mt-4 pt-4 border-t border-gray-200">
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-gray-500">Total Emails:</span>
+                  <span className="font-medium">{data.emailStats.totalSent + data.emailStats.notSent}</span>
+                </div>
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-gray-500">Delivery Rate:</span>
+                  <span className="font-medium">
+                    {data.emailStats.totalSent > 0 
+                      ? `${Math.round((data.emailStats.delivered / data.emailStats.totalSent) * 100)}%`
+                      : '0%'
+                    }
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Invoice Status */}
+          <div className="card">
+            <div className="px-6 py-4 border-b border-gray-200">
+              <h2 className="text-lg font-medium text-gray-900">Invoice Status</h2>
+            </div>
+            <div className="p-6">
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center">
+                    <CheckCircleIcon className="h-5 w-5 text-green-500 mr-2" />
+                    <span className="text-sm text-gray-600">Paid</span>
+                  </div>
+                  <span className="text-sm font-medium text-gray-900">{data.paidInvoices}</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center">
+                    <ClockIcon className="h-5 w-5 text-blue-500 mr-2" />
+                    <span className="text-sm text-gray-600">Pending</span>
+                  </div>
+                  <span className="text-sm font-medium text-gray-900">{data.pendingInvoices}</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center">
+                    <ExclamationTriangleIcon className="h-5 w-5 text-red-500 mr-2" />
+                    <span className="text-sm text-gray-600">Overdue</span>
+                  </div>
+                  <span className="text-sm font-medium text-gray-900">{data.overdueInvoices}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Recent Activity */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Recent Invoices */}
+          <div className="card">
+            <div className="px-6 py-4 border-b border-gray-200">
+              <div className="flex items-center justify-between">
+                <h2 className="text-lg font-medium text-gray-900">Recent Invoices</h2>
+                <Link href="/invoices" className="text-sm text-indigo-600 hover:text-indigo-900">
+                  View all
+                </Link>
+              </div>
+            </div>
+            <div className="divide-y divide-gray-200">
+              {data.recentInvoices.length === 0 ? (
+                <div className="px-6 py-4 text-center text-gray-500">
+                  No invoices yet
+                </div>
+              ) : (
+                data.recentInvoices.map((invoice) => (
+                  <div key={invoice.id} className="px-6 py-4">
+                    <div className="flex items-center justify-between">
+                      <div className="flex-1">
+                        <div className="flex items-center space-x-3">
+                          <p className="text-sm font-medium text-gray-900">{invoice.invoiceNumber}</p>
+                          <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${getStatusColor(invoice.status)}`}>
+                            {invoice.status}
+                          </span>
+                          {invoice.emailStatus && (
+                            <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${getEmailStatusColor(invoice.emailStatus)}`}>
+                              {invoice.emailStatus === 'delivered' && <EnvelopeIcon className="h-3 w-3 mr-1" />}
+                              {invoice.emailStatus}
+                            </span>
+                          )}
+                        </div>
+                        <p className="text-sm text-gray-500">{invoice.clientName}</p>
+                        <p className="text-xs text-gray-400">
+                          Due {format(new Date(invoice.dueDate), 'MMM dd, yyyy')}
+                          {isOverdue(invoice.dueDate) && invoice.status !== 'paid' && (
+                            <span className="ml-2 text-red-600">(Overdue)</span>
+                          )}
+                        </p>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-sm font-medium text-gray-900">${invoice.amount.toFixed(2)}</p>
+                        {invoice.lastEmailedAt && (
+                          <p className="text-xs text-gray-500">
+                            Emailed {format(new Date(invoice.lastEmailedAt), 'MMM dd')}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+
+          {/* Recent Email Activity */}
+          <div className="card">
+            <div className="px-6 py-4 border-b border-gray-200">
+              <h2 className="text-lg font-medium text-gray-900">Recent Email Activity</h2>
+            </div>
+            <div className="divide-y divide-gray-200">
+              {data.recentEmailActivity.length === 0 ? (
+                <div className="px-6 py-4 text-center text-gray-500">
+                  No email activity yet
+                </div>
+              ) : (
+                data.recentEmailActivity.map((activity, index) => (
+                  <div key={index} className="px-6 py-4">
+                    <div className="flex items-center justify-between">
+                      <div className="flex-1">
+                        <div className="flex items-center space-x-2">
+                          <EnvelopeIcon className="h-4 w-4 text-gray-400" />
+                          <span className="text-sm font-medium text-gray-900">
+                            {activity.emailType === 'invoice' ? 'Invoice' : 'Reminder'}
+                          </span>
+                          <span className="text-sm text-gray-500">
+                            {activity.invoiceNumber}
+                          </span>
+                        </div>
+                        <p className="text-sm text-gray-500">{activity.clientName}</p>
+                        <p className="text-xs text-gray-400">
+                          {format(new Date(activity.sentAt), 'MMM dd, yyyy HH:mm')}
+                        </p>
+                      </div>
+                      <div className="text-right">
+                        <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${getEmailStatusColor(activity.status)}`}>
+                          {activity.status}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
         </div>
       </div>
     </DashboardLayout>

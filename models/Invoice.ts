@@ -20,6 +20,26 @@ const InvoiceItemSchema = new mongoose.Schema({
   },
 });
 
+const EmailLogSchema = new mongoose.Schema({
+  sentAt: {
+    type: Date,
+    default: Date.now,
+  },
+  messageId: String,
+  emailType: {
+    type: String,
+    enum: ['invoice', 'reminder'],
+    required: true,
+  },
+  recipient: String,
+  status: {
+    type: String,
+    enum: ['sent', 'delivered', 'failed'],
+    default: 'sent',
+  },
+  error: String,
+});
+
 const InvoiceSchema = new mongoose.Schema({
   userId: {
     type: mongoose.Schema.Types.ObjectId,
@@ -73,6 +93,13 @@ const InvoiceSchema = new mongoose.Schema({
   terms: String,
   stripePaymentIntentId: String,
   paidAt: Date,
+  emailLogs: [EmailLogSchema],
+  lastEmailedAt: Date,
+  emailStatus: {
+    type: String,
+    enum: ['not_sent', 'sent', 'delivered', 'failed'],
+    default: 'not_sent',
+  },
   createdAt: {
     type: Date,
     default: Date.now,

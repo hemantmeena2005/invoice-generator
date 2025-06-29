@@ -3,8 +3,9 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import DashboardLayout from '@/components/DashboardLayout'
-import { PlusIcon, MagnifyingGlassIcon, EyeIcon, PencilIcon, TrashIcon, DocumentArrowDownIcon } from '@heroicons/react/24/outline'
+import { PlusIcon, MagnifyingGlassIcon, EyeIcon, PencilIcon, TrashIcon, DocumentArrowDownIcon, EnvelopeIcon } from '@heroicons/react/24/outline'
 import Link from 'next/link'
+import { format } from 'date-fns'
 
 interface Invoice {
   _id: string
@@ -18,6 +19,8 @@ interface Invoice {
   status: string
   issueDate: string
   dueDate: string
+  emailStatus?: string
+  lastEmailedAt?: string
   createdAt: string
 }
 
@@ -107,6 +110,23 @@ export default function InvoicesPage() {
     }
   }
 
+  const getEmailStatusColor = (status: string) => {
+    switch (status) {
+      case 'delivered':
+        return 'bg-green-100 text-green-800'
+      case 'sent':
+        return 'bg-blue-100 text-blue-800'
+      case 'failed':
+        return 'bg-red-100 text-red-800'
+      default:
+        return 'bg-gray-100 text-gray-800'
+    }
+  }
+
+  const isOverdue = (dueDate: string) => {
+    return new Date(dueDate) < new Date() && new Date(dueDate).getTime() !== new Date().setHours(0, 0, 0, 0)
+  }
+
   if (loading) {
     return (
       <DashboardLayout>
@@ -162,89 +182,131 @@ export default function InvoicesPage() {
         {/* Invoices List */}
         <div className="card">
           <div className="px-6 py-4 border-b border-gray-200">
-            <h2 className="text-lg font-medium text-gray-900">
-              {filteredInvoices.length} {filteredInvoices.length === 1 ? 'Invoice' : 'Invoices'}
-            </h2>
+            <h2 className="text-lg font-medium text-gray-900">All Invoices</h2>
           </div>
-          <div className="divide-y divide-gray-200">
-            {filteredInvoices.length === 0 ? (
-              <div className="px-6 py-12 text-center">
-                <div className="text-gray-500">
-                  {searchTerm || statusFilter !== 'all' ? 'No invoices found matching your criteria.' : 'No invoices yet.'}
-                </div>
-                {!searchTerm && statusFilter === 'all' && (
-                  <Link href="/invoices/new" className="btn-primary inline-flex items-center mt-4">
-                    <PlusIcon className="h-5 w-5 mr-2" />
-                    Create Your First Invoice
-                  </Link>
-                )}
-              </div>
-            ) : (
-              filteredInvoices.map((invoice) => (
-                <div key={invoice._id} className="px-6 py-4 hover:bg-gray-50">
-                  <div className="flex items-center justify-between">
-                    <div className="flex-1">
-                      <div className="flex items-center space-x-3">
-                        <div className="flex-shrink-0">
-                          <div className="h-10 w-10 bg-primary-100 rounded-lg flex items-center justify-center">
-                            <DocumentArrowDownIcon className="h-6 w-6 text-primary-600" />
+          <div className="overflow-x-auto">
+            <table className="min-w-full divide-y divide-gray-200">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Invoice
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Client
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Amount
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Status
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Email Status
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Issue Date
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Due Date
+                  </th>
+                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Actions
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {invoices.length === 0 ? (
+                  <tr>
+                    <td colSpan={8} className="px-6 py-12 text-center text-gray-500">
+                      <div className="flex flex-col items-center">
+                        <div className="text-gray-400 mb-4">
+                          <svg className="h-12 w-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                          </svg>
+                        </div>
+                        <p className="text-lg font-medium text-gray-900 mb-2">No invoices yet</p>
+                        <p className="text-gray-500 mb-4">Get started by creating your first invoice</p>
+                        <Link href="/invoices/new" className="btn-primary">
+                          Create Invoice
+                        </Link>
+                      </div>
+                    </td>
+                  </tr>
+                ) : (
+                  invoices.map((invoice) => (
+                    <tr key={invoice._id} className="hover:bg-gray-50">
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="text-sm font-medium text-gray-900">
+                          {invoice.invoiceNumber}
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="text-sm text-gray-900">{invoice.clientId.name}</div>
+                        {invoice.clientId.email && (
+                          <div className="text-sm text-gray-500">{invoice.clientId.email}</div>
+                        )}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="text-sm font-medium text-gray-900">
+                          ${invoice.total.toFixed(2)}
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(invoice.status)}`}>
+                          {invoice.status.charAt(0).toUpperCase() + invoice.status.slice(1)}
+                        </span>
+                        {isOverdue(invoice.dueDate) && invoice.status !== 'paid' && (
+                          <span className="ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                            Overdue
+                          </span>
+                        )}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        {invoice.clientId.email ? (
+                          <div className="flex items-center">
+                            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getEmailStatusColor(invoice.emailStatus || 'not_sent')}`}>
+                              {invoice.emailStatus === 'delivered' && <EnvelopeIcon className="h-3 w-3 mr-1" />}
+                              {invoice.emailStatus || 'Not sent'}
+                            </span>
+                            {invoice.lastEmailedAt && (
+                              <span className="ml-2 text-xs text-gray-500">
+                                {new Date(invoice.lastEmailedAt).toLocaleDateString()}
+                              </span>
+                            )}
                           </div>
+                        ) : (
+                          <span className="text-xs text-gray-500">No email</span>
+                        )}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        {format(new Date(invoice.issueDate), 'MMM dd, yyyy')}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className={`text-sm ${isOverdue(invoice.dueDate) && invoice.status !== 'paid' ? 'text-red-600 font-medium' : 'text-gray-900'}`}>
+                          {format(new Date(invoice.dueDate), 'MMM dd, yyyy')}
                         </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium text-gray-900 truncate">
-                            {invoice.invoiceNumber}
-                          </p>
-                          <p className="text-sm text-gray-500 truncate">
-                            {invoice.clientId.name}
-                          </p>
-                          <p className="text-sm text-gray-500 truncate">
-                            Due {new Date(invoice.dueDate).toLocaleDateString()}
-                          </p>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                        <div className="flex items-center justify-end space-x-2">
+                          <Link
+                            href={`/invoices/${invoice._id}`}
+                            className="text-indigo-600 hover:text-indigo-900"
+                          >
+                            <EyeIcon className="h-5 w-5" />
+                          </Link>
+                          <Link
+                            href={`/invoices/${invoice._id}/edit`}
+                            className="text-gray-600 hover:text-gray-900"
+                          >
+                            <PencilIcon className="h-5 w-5" />
+                          </Link>
                         </div>
-                      </div>
-                    </div>
-                    <div className="flex items-center space-x-4">
-                      <span className="text-sm font-medium text-gray-900">
-                        ${invoice.total.toLocaleString()}
-                      </span>
-                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(invoice.status)}`}>
-                        {invoice.status}
-                      </span>
-                      <div className="flex items-center space-x-2">
-                        <button
-                          onClick={() => handleDownloadPDF(invoice._id)}
-                          className="text-gray-400 hover:text-gray-600"
-                          title="Download PDF"
-                        >
-                          <DocumentArrowDownIcon className="h-5 w-5" />
-                        </button>
-                        <button
-                          onClick={() => router.push(`/invoices/${invoice._id}`)}
-                          className="text-gray-400 hover:text-gray-600"
-                          title="View Invoice"
-                        >
-                          <EyeIcon className="h-5 w-5" />
-                        </button>
-                        <button
-                          onClick={() => router.push(`/invoices/${invoice._id}/edit`)}
-                          className="text-gray-400 hover:text-gray-600"
-                          title="Edit Invoice"
-                        >
-                          <PencilIcon className="h-5 w-5" />
-                        </button>
-                        <button
-                          onClick={() => handleDelete(invoice._id)}
-                          className="text-gray-400 hover:text-red-600"
-                          title="Delete Invoice"
-                        >
-                          <TrashIcon className="h-5 w-5" />
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              ))
-            )}
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
           </div>
         </div>
       </div>

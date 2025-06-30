@@ -43,8 +43,8 @@ export async function POST(request: NextRequest) {
     }
 
     // Debug: Log the environment variable
-    console.log('NEXT_PUBLIC_APP_URL:', process.env.NEXT_PUBLIC_APP_URL);
-    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://invoice-generator-seven-omega.vercel.app';
+    // const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://invoice-generator-seven-omega.vercel.app';
+    const baseUrl = 'https://invoice-generator-seven-omega.vercel.app';
     console.log('Using base URL:', baseUrl);
     
     const successUrl = `${baseUrl}/invoices/${invoiceId}?success=true`;

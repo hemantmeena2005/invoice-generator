@@ -46,6 +46,11 @@ export async function POST(request: NextRequest) {
     console.log('NEXT_PUBLIC_APP_URL:', process.env.NEXT_PUBLIC_APP_URL);
     const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://invoice-generator-seven-omega.vercel.app';
     console.log('Using base URL:', baseUrl);
+    
+    const successUrl = `${baseUrl}/invoices/${invoiceId}?success=true`;
+    const cancelUrl = `${baseUrl}/invoices/${invoiceId}?canceled=true`;
+    console.log('Success URL:', successUrl);
+    console.log('Cancel URL:', cancelUrl);
 
     // Create Stripe checkout session with proper redirect URLs
     const checkoutSession = await stripe.checkout.sessions.create({
@@ -64,12 +69,19 @@ export async function POST(request: NextRequest) {
         },
       ],
       mode: 'payment',
-      success_url: `${baseUrl}/invoices/${invoiceId}?success=true`,
-      cancel_url: `${baseUrl}/invoices/${invoiceId}?canceled=true`,
+      success_url: successUrl,
+      cancel_url: cancelUrl,
       metadata: {
         invoiceId: invoiceId,
         userId: user._id.toString(),
       },
+    });
+
+    console.log('Stripe checkout session created:', {
+      sessionId: checkoutSession.id,
+      successUrl: checkoutSession.success_url,
+      cancelUrl: checkoutSession.cancel_url,
+      checkoutUrl: checkoutSession.url
     });
 
     return NextResponse.json({ 

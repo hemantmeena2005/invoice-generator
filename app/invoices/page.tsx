@@ -6,6 +6,7 @@ import DashboardLayout from '@/components/DashboardLayout'
 import { PlusIcon, MagnifyingGlassIcon, EyeIcon, PencilIcon, TrashIcon, DocumentArrowDownIcon, EnvelopeIcon } from '@heroicons/react/24/outline'
 import Link from 'next/link'
 import { format } from 'date-fns'
+import { useSession } from 'next-auth/react'
 
 interface Invoice {
   _id: string
@@ -25,6 +26,7 @@ interface Invoice {
 }
 
 export default function InvoicesPage() {
+  const { data: session, status } = useSession()
   const [invoices, setInvoices] = useState<Invoice[]>([])
   const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState('')
@@ -32,8 +34,10 @@ export default function InvoicesPage() {
   const router = useRouter()
 
   useEffect(() => {
-    fetchInvoices()
-  }, [])
+    if (status === 'authenticated') {
+      fetchInvoices()
+    }
+  }, [status])
 
   const fetchInvoices = async () => {
     try {
@@ -127,7 +131,7 @@ export default function InvoicesPage() {
     return new Date(dueDate) < new Date() && new Date(dueDate).getTime() !== new Date().setHours(0, 0, 0, 0)
   }
 
-  if (loading) {
+  if (loading || status === 'loading') {
     return (
       <DashboardLayout>
         <div className="flex items-center justify-center h-64">

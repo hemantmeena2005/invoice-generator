@@ -4,6 +4,7 @@ import { authOptions } from '@/lib/auth';
 import dbConnect from '@/lib/db';
 import Invoice from '@/models/Invoice';
 import User from '@/models/User';
+import Client from '@/models/Client';
 
 export async function GET() {
   try {
@@ -33,6 +34,7 @@ export async function GET() {
 export async function POST(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
+    console.log('Session:', session);
     if (!session?.user?.email) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
@@ -40,17 +42,26 @@ export async function POST(request: NextRequest) {
     await dbConnect();
     
     const user = await User.findOne({ email: session.user.email });
+    console.log('User:', user);
     if (!user) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 });
     }
 
     const body = await request.json();
+    console.log('Request body:', body);
     const { clientId, dueDate, items, taxRate, notes, terms } = body;
 
     if (!clientId || !dueDate || !items || items.length === 0) {
       return NextResponse.json({ 
         error: 'Client, due date, and at least one item are required' 
       }, { status: 400 });
+    }
+
+    // Validate client ownership
+    const client = await Client.findOne({ _id: clientId, userId: user._id });
+    console.log('Client:', client);
+    if (!client) {
+      return NextResponse.json({ error: 'Client does not belong to user or not found' }, { status: 400 });
     }
 
     // Calculate totals
@@ -68,6 +79,7 @@ export async function POST(request: NextRequest) {
       {},
       { sort: { invoiceNumber: -1 } }
     );
+    console.log('Last invoice:', lastInvoice);
     
     let lastNumber = 0;
     if (lastInvoice && lastInvoice.invoiceNumber) {
@@ -79,6 +91,7 @@ export async function POST(request: NextRequest) {
     
     const currentYear = new Date().getFullYear();
     const invoiceNumber = `INV-${currentYear}${String(lastNumber + 1).padStart(4, '0')}`;
+    console.log('Generated invoice number:', invoiceNumber);
 
     const invoice = new Invoice({
       userId: user._id,
@@ -96,12 +109,14 @@ export async function POST(request: NextRequest) {
       notes,
       terms,
     });
+    console.log('Invoice to save:', invoice);
 
     await invoice.save();
     
     return NextResponse.json(invoice, { status: 201 });
   } catch (error) {
     console.error('Error creating invoice:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    return NextResponse.json({ error: 'Internal server error', details: errorMessage }, { status: 500 });
   }
 } 

@@ -54,7 +54,6 @@ const InvoiceSchema = new mongoose.Schema({
   invoiceNumber: {
     type: String,
     required: true,
-    unique: true,
   },
   status: {
     type: String,
@@ -114,5 +113,8 @@ InvoiceSchema.pre('save', function(next) {
   this.updatedAt = new Date();
   next();
 });
+
+// Add compound unique index for userId + invoiceNumber
+InvoiceSchema.index({ userId: 1, invoiceNumber: 1 }, { unique: true });
 
 export default mongoose.models.Invoice || mongoose.model('Invoice', InvoiceSchema); 
